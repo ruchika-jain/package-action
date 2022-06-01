@@ -19,24 +19,42 @@ async function run(): Promise<void> {
     core.setSecret(TOKEN);
     const repo_owner_and_name: string[2] = core.getInput('repository')
     const repository_owner: string = core.getInput('repository_owner')
-    
-    const standalone = !(await oras.isAvailable());
+    const semver: string = core.getInput('semver')
 
-    if (standalone) {
-      core.info(`Oras info skipped in standalone mode`);
-    } else {
-      await exec.exec('oras', ['version'], {
-        failOnStdErr: false
-      });
-    }
-    if (!(await buildx.isAvailable(standalone))) {
-      core.setFailed(`Docker buildx is required. See https://github.com/docker/setup-buildx-action to set up buildx.`);
+    if (!(await oras.isAvailable())) {
+      core.setFailed(`Oras is required to generate OCI artifacts.`);
       return;
     }
     
+//     const standalone = !(await docker.isAvailable());
+//     if (standalone) {
+//       core.info(`Docker info skipped in standalone mode`);
+//     } else {
+//       await exec.exec('docker', ['version'], {
+//         failOnStdErr: false
+//       });
+//     }
+    await GHCR_login(repository_owner, TOKEN);
+    await publish_OCI_artifact(repository, semver)
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) core.setFailed("Something failed")
   }
 }
-
+async function GHCR_login(repository_owner: string, github_token: string): Promise<void> {
+  try {
+    await exec.exec('oras login ghcr.io', ['-u', repository_owner, '-p', github_token])
+    console.log("Oras logged in successfully!")
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(`Oras login failed`)
+  }
+}
+async function publish_OCI_artifact(repository: string[], semver: string): Promise<void> {
+  try {
+    const cmd : string = `oras push ghcr.io/${repository[0]}/${repository[0]}:${semver} --manifest-config /dev/null:application/vnd.actions.packages.jsaction ./:application/vnd.actions.packages.jsaction.layer.v1+tar
+    await exec.exec(cmd)
+    console.log("Oras artifacts pushed successfully!")
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(`GHCR push failed`)
+  }
+}
 run()
