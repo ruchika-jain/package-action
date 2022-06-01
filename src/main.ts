@@ -14,6 +14,9 @@ async function run(): Promise<void> {
     core.setOutput('time', new Date().toTimeString())
     
     const TOKEN = core.getInput('token');
+    
+    core.setSecret(TOKEN);
+    
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
