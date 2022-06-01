@@ -5,6 +5,7 @@ on: # rebuild any PRs and main branch changes
     branches:
       - main
       - 'releases/*'
+  workflow_dispatch:
 
 jobs:
   build: # make sure build/ci work properly
@@ -18,7 +19,19 @@ jobs:
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./
+      - name: Checking out!
+        uses: actions/checkout@v3
+  
+      - name: Install Oras
+        run: |
+          curl -LO https://github.com/oras-project/oras/releases/download/v0.12.0/oras_0.12.0_linux_amd64.tar.gz
+          mkdir -p oras-install/
+          tar -zxf oras_0.12.0_*.tar.gz -C oras-install/
+          mv oras-install/oras /usr/local/bin/
+          rm -rf oras_0.12.0_*.tar.gz oras-install/
+          echo "Oras installed!"
+          
+      - name: Running action   
+        uses: ./
         with:
           milliseconds: 1000
