@@ -2,7 +2,7 @@ import * as exec from '@actions/exec';
 
 export async function isAvailable(): Promise<boolean> {
   return await exec
-    .getExecOutput('oras', version, {
+    .getExecOutput('oras', ['version'], {
       ignoreReturnCode: true,
       silent: true
     })

@@ -17,7 +17,8 @@ async function run(): Promise<void> {
     
     const TOKEN = core.getInput('token'); 
     core.setSecret(TOKEN);
-    const repo_owner_and_name: string[2] = core.getInput('repository')
+    const repo_input: string = core.getInput('repository');
+    const repo_owner_and_name: string[] = repo_input.split("/");
     const repository_owner: string = core.getInput('repository_owner')
     const semver: string = core.getInput('semver')
 
@@ -35,7 +36,7 @@ async function run(): Promise<void> {
 //       });
 //     }
     await GHCR_login(repository_owner, TOKEN);
-    await publish_OCI_artifact(repository, semver)
+    await publish_OCI_artifact(repo_owner_and_name, semver)
   } catch (error) {
     if (error instanceof Error) core.setFailed("Something failed")
   }
@@ -50,7 +51,7 @@ async function GHCR_login(repository_owner: string, github_token: string): Promi
 }
 async function publish_OCI_artifact(repository: string[], semver: string): Promise<void> {
   try {
-    const cmd : string = `oras push ghcr.io/${repository[0]}/${repository[0]}:${semver} --manifest-config /dev/null:application/vnd.actions.packages.jsaction ./:application/vnd.actions.packages.jsaction.layer.v1+tar
+    const cmd : string = `oras push ghcr.io/${repository[0]}/${repository[1]}:${semver} --manifest-config /dev/null:application/vnd.actions.packages.jsaction ./:application/vnd.actions.packages.jsaction.layer.v1+tar`
     await exec.exec(cmd)
     console.log("Oras artifacts pushed successfully!")
   } catch (error) {
