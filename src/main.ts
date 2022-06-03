@@ -60,4 +60,14 @@ async function publish_OCI_artifact(repository: string[], semver: string): Promi
     if (error instanceof Error) core.setFailed(`GHCR push failed`)
   }
 }
+async function build_docker_image(repository: string[], semver: string): Promise<void> {
+  try {
+    const cmd : string = `docker build . --file <file_name> --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}`
+    await exec.exec(cmd)
+    console.log("Docker image built successfully!")
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(`GHCR push failed`)
+  }
+}
+
 run()
