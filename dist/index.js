@@ -68,6 +68,8 @@ function run() {
             //     }
             yield GHCR_login(repository_owner, TOKEN);
             yield publish_OCI_artifact(repo_owner_and_name, semver);
+            yield cosignGenerateKeypair(TOKEN);
+            yield signPackage(repo_owner_and_name, semver);
         }
         catch (error) {
             if (error instanceof Error)
@@ -90,13 +92,43 @@ function GHCR_login(repository_owner, github_token) {
 function publish_OCI_artifact(repository, semver) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const cmd = `oras push ghcr.io/${repository[0]}/${repository[1]}:${semver} --manifest-config /dev/null:application/vnd.actions.packages.jsaction ./:application/vnd.actions.packages.jsaction.layer.v1+tar`;
+            const cmd = `oras push ghcr.io/${repository[0]}/${repository[1]}:${semver}\
+     --manifest-config /dev/null:application/vnd.actions.packages.jsaction\
+      ./:application/vnd.actions.packages.jsaction.layer.v1+tar`;
             yield exec.exec(cmd);
             console.log("Oras artifacts pushed successfully!");
         }
         catch (error) {
             if (error instanceof Error)
                 core.setFailed(`GHCR push failed`);
+        }
+    });
+}
+function cosignGenerateKeypair(token) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            process.env.COSIGN_PASSWORD = token;
+            const cmd = `cosign generate-key-pair`;
+            yield exec.exec(cmd);
+            console.log("Signature pushed successfully to registry!");
+        }
+        catch (error) {
+            if (error instanceof Error)
+                core.setFailed(`Generating Cosign keypair failed!`);
+        }
+    });
+}
+function signPackage(repository, semver) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            // process.env.COSIGN_PASSWORD = token;
+            const cmd = `cosign sign --key cosign.key ghcr.io/${repository[0]}/${repository[1]}:${semver}`;
+            yield exec.exec(cmd);
+            console.log("Signature pushed successfully to registry!");
+        }
+        catch (error) {
+            if (error instanceof Error)
+                core.setFailed(`Signature failed!`);
         }
     });
 }
