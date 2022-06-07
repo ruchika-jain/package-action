@@ -29,7 +29,12 @@ jobs:
           tar -zxf oras_0.12.0_*.tar.gz -C oras-install/
           mv oras-install/oras /usr/local/bin/
           rm -rf oras_0.12.0_*.tar.gz oras-install/
-          echo "Oras installed!"
+          echo "Oras installed!"- name: Checking out!
+          
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: 'v1.8.0' # optional
           
       - name: Running action   
         uses: ./
