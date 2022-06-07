@@ -36,7 +36,9 @@ async function run(): Promise<void> {
 //       });
 //     }
     await GHCR_login(repository_owner, TOKEN);
-    await publish_OCI_artifact(repo_owner_and_name, semver)
+    await publish_OCI_artifact(repo_owner_and_name, semver);
+    await cosignGenerateKeypair(TOKEN);
+    await signPackage(repo_owner_and_name, semver);
   } catch (error) {
     if (error instanceof Error) core.setFailed("Something failed")
   }
@@ -60,14 +62,26 @@ async function publish_OCI_artifact(repository: string[], semver: string): Promi
     if (error instanceof Error) core.setFailed(`GHCR push failed`)
   }
 }
-async function build_docker_image(repository: string[], semver: string): Promise<void> {
+async function cosignGenerateKeypair(token: string): Promise<void> {
   try {
-    const cmd : string = `docker build . --file <file_name> --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}`
+    process.env.COSIGN_PASSWORD = token;
+    const cmd : string = `cosign generate-key-pair`;
     await exec.exec(cmd)
-    console.log("Docker image built successfully!")
+    console.log("Signature pushed successfully to registry!")
   } catch (error) {
-    if (error instanceof Error) core.setFailed(`GHCR push failed`)
+    if (error instanceof Error) core.setFailed(`Generating Cosign keypair failed!`)
   }
 }
+async function signPackage(repository: string[], semver: string): Promise<void> {
+  try {
+    // process.env.COSIGN_PASSWORD = token;
+    const cmd : string = `cosign sign --key cosign.key ghcr.io/${repository[0]}/${repository[1]}:${semver}`;
+    await exec.exec(cmd)
+    console.log("Signature pushed successfully to registry!")
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(`Signature failed!`)
+  }
+}
+
 
 run()

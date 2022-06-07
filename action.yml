@@ -24,6 +24,7 @@ inputs:
   semver:
     description: 'Release version'
     default: '1.0.1'
+    
 runs:
   using: 'node16'
   main: 'dist/index.js'
