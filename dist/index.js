@@ -68,7 +68,7 @@ function run() {
 function ghcrLogin(repositoryOwner, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield exec.exec('oras login ghcr.io', ['-u', repositoryOwner, '-p', githubToken]);
+            yield exec.exec(`echo ${githubToken} | oras login ghcr.io`, ['-u', repositoryOwner, '--password-stdin']);
             console.log("Oras logged in successfully!");
         }
         catch (error) {
