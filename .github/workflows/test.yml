@@ -43,6 +43,6 @@ jobs:
           package-name: 'dummy-pkg-action'
 
       - name: Signing action
-        uses: ruchika-jain/sign-package@v0.4
+        uses: ruchika-jain/sign-package@v0.42
         with: 
           package-name: ${{ steps.publish-action.outputs.package-name }}

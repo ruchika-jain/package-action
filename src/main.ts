@@ -33,7 +33,7 @@ async function run(): Promise<void> {
 
 async function ghcrLogin(repositoryOwner: string, githubToken: string): Promise<void> {
   try {
-    await exec.exec(`echo ${githubToken} | oras login ghcr.io`, ['-u', repositoryOwner, '--password-stdin'])
+    await exec.exec(`oras login ghcr.io`, ['-u', repositoryOwner, '-p', githubToken]);
     console.log("Oras logged in successfully!")
   } catch (error) {
     if (error instanceof Error) core.setFailed(`Oops! Oras login failed!`)
