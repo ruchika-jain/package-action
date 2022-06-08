@@ -38,5 +38,11 @@ jobs:
           
       - name: Running action   
         uses: ./
+        id: publish-action
         with:
-          milliseconds: 1000
+          package-name: 'dummy-pkg-action'
+
+      - name: Signing action
+        uses: ruchika-jain/sign-package@v0.4
+        with: 
+          package-name: ${{ steps.publish-action.outputs.package-name }}

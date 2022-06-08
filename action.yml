@@ -2,29 +2,22 @@ name: 'Package actions'
 description: 'Publish actions as OCI artifacts to GHCR and sign it.'
 author: 'Ruchika Jain'
 inputs:
-  milliseconds: # change this
-    required: true
-    description: 'input description here'
-    default: 1000
   repository:
     description: 'Repository name with owner. For example, actions/package-action'
     default: ${{ github.repository }}
-  repository_owner:
-    description: 'Repository owner. For example, actions'
-    default: ${{ github.repository_owner }}
   token:
     description: >
-      Personal access token (PAT) used to fetch the repository. The PAT is configured
-      with the local git config, which enables your scripts to run authenticated git
-      commands. The post-job step removes the PAT.
-      We recommend using a service account with the least permissions necessary.
-      Also when generating a new PAT, select the least scopes necessary.
-      [Learn more about creating and using encrypted secrets](https://help.github.com/en/actions/automating-your-workflow-with-github-actions/creating-and-using-encrypted-secrets)
+      Personal access token (PAT) used to fetch the repository with write package scope.
     default: ${{ github.token }}
   semver:
     description: 'Release version'
     default: '1.0.1'
-    
+  package-name: 
+    description: 'The name of the package to be published to GHCR'
+    default: ${{ github.repository }}
+outputs:
+  package-name: # id of output
+    description: 'The name of package published to GHCR'   
 runs:
   using: 'node16'
   main: 'dist/index.js'

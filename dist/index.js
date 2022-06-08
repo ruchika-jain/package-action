@@ -37,39 +37,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(186));
 const exec = __importStar(__nccwpck_require__(514));
-const wait_1 = __nccwpck_require__(817);
 const oras = __importStar(__nccwpck_require__(767));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const ms = core.getInput('milliseconds');
-            core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-            core.debug(new Date().toTimeString());
-            yield (0, wait_1.wait)(parseInt(ms, 10));
-            core.debug(new Date().toTimeString());
-            core.setOutput('time', new Date().toTimeString());
             const TOKEN = core.getInput('token');
             core.setSecret(TOKEN);
-            const repo_input = core.getInput('repository');
-            const repo_owner_and_name = repo_input.split("/");
-            const repository_owner = core.getInput('repository_owner');
+            const repoInput = core.getInput('repository');
+            const repoDetails = repoInput.split("/");
+            const repositoryOwner = repoDetails[0];
+            const repositoryName = repoDetails[1];
+            const packageName = core.getInput('package-name') === repoInput ? repositoryName : core.getInput('package-name');
             const semver = core.getInput('semver');
             if (!(yield oras.isAvailable())) {
                 core.setFailed(`Oras is required to generate OCI artifacts.`);
                 return;
             }
-            //     const standalone = !(await docker.isAvailable());
-            //     if (standalone) {
-            //       core.info(`Docker info skipped in standalone mode`);
-            //     } else {
-            //       await exec.exec('docker', ['version'], {
-            //         failOnStdErr: false
-            //       });
-            //     }
-            yield GHCR_login(repository_owner, TOKEN);
-            yield publish_OCI_artifact(repo_owner_and_name, semver);
-            yield cosignGenerateKeypair(TOKEN);
-            yield signPackage(repo_owner_and_name, semver);
+            yield ghcrLogin(repositoryOwner, TOKEN);
+            yield publishOciArtifact(repositoryOwner, semver, packageName);
+            core.setOutput('package-name', packageName);
+            // await cosignGenerateKeypair(TOKEN);
+            // await signPackage(repoDetails, semver, packageName);
         }
         catch (error) {
             if (error instanceof Error)
@@ -77,30 +65,30 @@ function run() {
         }
     });
 }
-function GHCR_login(repository_owner, github_token) {
+function ghcrLogin(repositoryOwner, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield exec.exec('oras login ghcr.io', ['-u', repository_owner, '-p', github_token]);
+            yield exec.exec('oras login ghcr.io', ['-u', repositoryOwner, '-p', githubToken]);
             console.log("Oras logged in successfully!");
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(`Oras login failed`);
+                core.setFailed(`Oops! Oras login failed!`);
         }
     });
 }
-function publish_OCI_artifact(repository, semver) {
+function publishOciArtifact(repositoryOwner, semver, packageName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const cmd = `oras push ghcr.io/${repository[0]}/${repository[1]}:${semver}\
-     --manifest-config /dev/null:application/vnd.actions.packages.jsaction\
-      ./:application/vnd.actions.packages.jsaction.layer.v1+tar`;
+            const cmd = `oras push ghcr.io/${repositoryOwner}/${packageName}:${semver}\
+     --manifest-config /dev/null:application/vnd.actions.packages\
+      ./:application/vnd.actions.packages.layer.v1+tar`;
             yield exec.exec(cmd);
             console.log("Oras artifacts pushed successfully!");
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(`GHCR push failed`);
+                core.setFailed(`Oops! Action package push to GHCR failed!`);
         }
     });
 }
@@ -110,25 +98,24 @@ function cosignGenerateKeypair(token) {
             process.env.COSIGN_PASSWORD = token;
             const cmd = `cosign generate-key-pair`;
             yield exec.exec(cmd);
-            console.log("Signature pushed successfully to registry!");
+            console.log("Private public keypair generated successfully!");
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(`Generating Cosign keypair failed!`);
+                core.setFailed(`Oops!Generating Cosign keypair failed!`);
         }
     });
 }
-function signPackage(repository, semver) {
+function signPackage(repositoryOwner, semver, packageName) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            // process.env.COSIGN_PASSWORD = token;
-            const cmd = `cosign sign --key cosign.key ghcr.io/${repository[0]}/${repository[1]}:${semver}`;
+            const cmd = `cosign sign --key cosign.key ghcr.io/${repositoryOwner}/${packageName}:${semver}`;
             yield exec.exec(cmd);
             console.log("Signature pushed successfully to registry!");
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(`Signature failed!`);
+                core.setFailed(`Oops! Signature failed!`);
         }
     });
 }
@@ -175,55 +162,38 @@ exports.isAvailable = void 0;
 const exec = __importStar(__nccwpck_require__(514));
 function isAvailable() {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield exec
-            .getExecOutput('oras', ['version'], {
-            ignoreReturnCode: true,
-            silent: true
-        })
-            .then(res => {
-            if (res.stderr.length > 0 && res.exitCode != 0) {
+        // return await exec
+        //   .getExecOutput('oras', ['version'], {
+        //     ignoreReturnCode: true,
+        //     silent: true
+        //   })
+        //   .then(res => {
+        //     if (res.stderr.length > 0 && res.exitCode !== 0) {
+        //       return false;
+        //     }
+        //     return res.exitCode === 0;
+        //   })
+        //   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        //   .catch(error => {
+        //     return false;
+        //   });
+        try {
+            const res = yield exec
+                .getExecOutput('oras', ['version'], {
+                ignoreReturnCode: true,
+                silent: true
+            });
+            if (res.stderr.length > 0 && res.exitCode !== 0) {
                 return false;
             }
-            return res.exitCode == 0;
-        })
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            .catch(error => {
+            return res.exitCode === 0;
+        }
+        catch (err) {
             return false;
-        });
+        }
     });
 }
 exports.isAvailable = isAvailable;
-
-
-/***/ }),
-
-/***/ 817:
-/***/ (function(__unused_webpack_module, exports) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-function wait(milliseconds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => {
-            if (isNaN(milliseconds)) {
-                throw new Error('milliseconds not a number');
-            }
-            setTimeout(() => resolve('done!'), milliseconds);
-        });
-    });
-}
-exports.wait = wait;
 
 
 /***/ }),

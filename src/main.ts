@@ -1,87 +1,76 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
-import {wait} from './wait'
-import * as docker from './docker';
 import * as oras from './oras';
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
-    
     const TOKEN = core.getInput('token'); 
     core.setSecret(TOKEN);
-    const repo_input: string = core.getInput('repository');
-    const repo_owner_and_name: string[] = repo_input.split("/");
-    const repository_owner: string = core.getInput('repository_owner')
-    const semver: string = core.getInput('semver')
-
+    const repoInput: string = core.getInput('repository');
+    const repoDetails: string[] = repoInput.split("/");
+    const repositoryOwner: string = repoDetails[0];
+    const repositoryName: string = repoDetails[1];
+    const packageName: string = core.getInput('package-name') === repoInput ? repositoryName : core.getInput('package-name');
+    const semver: string = core.getInput('semver');
+    
     if (!(await oras.isAvailable())) {
       core.setFailed(`Oras is required to generate OCI artifacts.`);
       return;
     }
     
-//     const standalone = !(await docker.isAvailable());
-//     if (standalone) {
-//       core.info(`Docker info skipped in standalone mode`);
-//     } else {
-//       await exec.exec('docker', ['version'], {
-//         failOnStdErr: false
-//       });
-//     }
-    await GHCR_login(repository_owner, TOKEN);
-    await publish_OCI_artifact(repo_owner_and_name, semver);
-    await cosignGenerateKeypair(TOKEN);
-    await signPackage(repo_owner_and_name, semver);
-  } catch (error) {
-    if (error instanceof Error) core.setFailed("Something failed")
+    await ghcrLogin(repositoryOwner, TOKEN);
+    await publishOciArtifact(repositoryOwner, semver, packageName);
+
+    core.setOutput('package-name', packageName);
+
+    // await cosignGenerateKeypair(TOKEN);
+    // await signPackage(repoDetails, semver, packageName);
+  } 
+  catch (error) {
+    if (error instanceof Error) core.setFailed("Something failed");
   }
 }
-async function GHCR_login(repository_owner: string, github_token: string): Promise<void> {
+
+async function ghcrLogin(repositoryOwner: string, githubToken: string): Promise<void> {
   try {
-    await exec.exec('oras login ghcr.io', ['-u', repository_owner, '-p', github_token])
+    await exec.exec('oras login ghcr.io', ['-u', repositoryOwner, '-p', githubToken])
     console.log("Oras logged in successfully!")
   } catch (error) {
-    if (error instanceof Error) core.setFailed(`Oras login failed`)
+    if (error instanceof Error) core.setFailed(`Oops! Oras login failed!`)
   }
 }
-async function publish_OCI_artifact(repository: string[], semver: string): Promise<void> {
+
+async function publishOciArtifact(repositoryOwner: string, semver: string, packageName: string): Promise<void> {
   try {
-    const cmd : string = `oras push ghcr.io/${repository[0]}/${repository[1]}:${semver}\
-     --manifest-config /dev/null:application/vnd.actions.packages.jsaction\
-      ./:application/vnd.actions.packages.jsaction.layer.v1+tar`
-    await exec.exec(cmd)
+    const cmd : string = `oras push ghcr.io/${repositoryOwner}/${packageName}:${semver}\
+     --manifest-config /dev/null:application/vnd.actions.packages\
+      ./:application/vnd.actions.packages.layer.v1+tar`
+    await exec.exec(cmd);
     console.log("Oras artifacts pushed successfully!")
   } catch (error) {
-    if (error instanceof Error) core.setFailed(`GHCR push failed`)
+    if (error instanceof Error) core.setFailed(`Oops! Action package push to GHCR failed!`)
   }
 }
+
 async function cosignGenerateKeypair(token: string): Promise<void> {
   try {
     process.env.COSIGN_PASSWORD = token;
     const cmd : string = `cosign generate-key-pair`;
     await exec.exec(cmd)
-    console.log("Signature pushed successfully to registry!")
+    console.log("Private public keypair generated successfully!")
   } catch (error) {
-    if (error instanceof Error) core.setFailed(`Generating Cosign keypair failed!`)
-  }
-}
-async function signPackage(repository: string[], semver: string): Promise<void> {
-  try {
-    // process.env.COSIGN_PASSWORD = token;
-    const cmd : string = `cosign sign --key cosign.key ghcr.io/${repository[0]}/${repository[1]}:${semver}`;
-    await exec.exec(cmd)
-    console.log("Signature pushed successfully to registry!")
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(`Signature failed!`)
+    if (error instanceof Error) core.setFailed(`Oops!Generating Cosign keypair failed!`)
   }
 }
 
+async function signPackage(repositoryOwner: string[], semver: string, packageName: string): Promise<void> {
+  try {
+    const cmd : string = `cosign sign --key cosign.key ghcr.io/${repositoryOwner}/${packageName}:${semver}`;
+    await exec.exec(cmd)
+    console.log("Signature pushed successfully to registry!")
+  } catch (error) {
+    if (error instanceof Error) core.setFailed(`Oops! Signature failed!`)
+  }
+}
 
 run()
