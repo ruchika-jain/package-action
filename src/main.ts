@@ -52,25 +52,4 @@ async function publishOciArtifact(repositoryOwner: string, semver: string, packa
   }
 }
 
-async function cosignGenerateKeypair(token: string): Promise<void> {
-  try {
-    process.env.COSIGN_PASSWORD = token;
-    const cmd : string = `cosign generate-key-pair`;
-    await exec.exec(cmd)
-    console.log("Private public keypair generated successfully!")
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(`Oops!Generating Cosign keypair failed!`)
-  }
-}
-
-async function signPackage(repositoryOwner: string[], semver: string, packageName: string): Promise<void> {
-  try {
-    const cmd : string = `cosign sign --key cosign.key ghcr.io/${repositoryOwner}/${packageName}:${semver}`;
-    await exec.exec(cmd)
-    console.log("Signature pushed successfully to registry!")
-  } catch (error) {
-    if (error instanceof Error) core.setFailed(`Oops! Signature failed!`)
-  }
-}
-
 run()
