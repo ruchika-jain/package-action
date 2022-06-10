@@ -92,33 +92,6 @@ function publishOciArtifact(repositoryOwner, semver, packageName) {
         }
     });
 }
-function cosignGenerateKeypair(token) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            process.env.COSIGN_PASSWORD = token;
-            const cmd = `cosign generate-key-pair`;
-            yield exec.exec(cmd);
-            console.log("Private public keypair generated successfully!");
-        }
-        catch (error) {
-            if (error instanceof Error)
-                core.setFailed(`Oops!Generating Cosign keypair failed!`);
-        }
-    });
-}
-function signPackage(repositoryOwner, semver, packageName) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const cmd = `cosign sign --key cosign.key ghcr.io/${repositoryOwner}/${packageName}:${semver}`;
-            yield exec.exec(cmd);
-            console.log("Signature pushed successfully to registry!");
-        }
-        catch (error) {
-            if (error instanceof Error)
-                core.setFailed(`Oops! Signature failed!`);
-        }
-    });
-}
 run();
 
 
