@@ -32,7 +32,7 @@ jobs:
         uses: ./
         id: publish-action
         with:
-          package-name: 'dummy-pkg-action'
+          package-name: 'hello-pkg-action'
 
       - name: Signing action
         uses: ruchika-jain/sign-package@v0.44
