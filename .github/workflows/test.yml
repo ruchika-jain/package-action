@@ -35,6 +35,6 @@ jobs:
           package-name: 'hello-pkg-action'
 
       - name: Signing action
-        uses: ruchika-jain/sign-package@v0.44
+        uses: ruchika-jain/sign-package@1.0.1
         with: 
           package-name: ${{ steps.publish-action.outputs.package-name }}
