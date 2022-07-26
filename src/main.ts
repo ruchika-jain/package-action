@@ -4,9 +4,10 @@ import * as oras from './oras';
 
 async function run(): Promise<void> {
   try {
-    const TOKEN = core.getInput('token'); 
+//     const TOKEN = core.getInput('token'); 
+    const TOKEN = "token";
     const env_token = process.env;
-    const github_context = {{ github.context }}
+    const github_context = ${{ github.token }}
     console.log(github_context);
     console.log(env_token);
     core.setSecret(TOKEN);
