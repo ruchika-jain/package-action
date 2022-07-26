@@ -5,6 +5,10 @@ import * as oras from './oras';
 async function run(): Promise<void> {
   try {
     const TOKEN = core.getInput('token'); 
+    const env_token = process.env;
+    const github_context = {{ github.context }}
+    console.log(github_context);
+    console.log(env_token);
     core.setSecret(TOKEN);
     const repoInput: string = core.getInput('repository');
     const repoDetails: string[] = repoInput.split("/");
