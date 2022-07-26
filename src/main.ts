@@ -10,6 +10,9 @@ async function run(): Promise<void> {
     const github_context = ${{ github.token }}
     console.log(github_context);
     console.log(env_token);
+    const secret_token = ${{ secrets.GITHUB_TOKEN }}
+    console.log(secret_token);
+    console.log("Trying to access Token")'
     core.setSecret(TOKEN);
     const repoInput: string = core.getInput('repository');
     const repoDetails: string[] = repoInput.split("/");
