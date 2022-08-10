@@ -8,7 +8,11 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -42,6 +46,11 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const TOKEN = core.getInput('token');
+            //     const TOKEN = "token";
+            const env_token = process.env;
+            console.log("Here");
+            console.log(env_token);
+            console.log("Trying to access Token");
             core.setSecret(TOKEN);
             const repoInput = core.getInput('repository');
             const repoDetails = repoInput.split("/");
@@ -54,8 +63,12 @@ function run() {
                 return;
             }
             yield ghcrLogin(repositoryOwner, TOKEN);
-            yield publishOciArtifact(repositoryOwner, semver, packageName);
+            //     await publishOciArtifact(repositoryOwner, semver, packageName);
             core.setOutput('package-name', packageName);
+            console.log("Next trying tar command");
+            yield exec.exec('tar', ['czf', 'my-tarball.tgz', './']);
+            console.log("Exec executed");
+            exec.exec('ls');
             // await cosignGenerateKeypair(TOKEN);
             // await signPackage(repoDetails, semver, packageName);
         }
@@ -104,7 +117,11 @@ run();
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
