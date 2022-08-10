@@ -66,7 +66,7 @@ function run() {
             //     await publishOciArtifact(repositoryOwner, semver, packageName);
             core.setOutput('package-name', packageName);
             console.log("Next trying tar command");
-            yield exec.exec('tar', ['czf', 'my-tarball.tgz', './']);
+            yield exec.exec(`tar --exclude=tarball.tar.gz -zcvf tarball.tar.gz .`);
             console.log("Exec executed");
             exec.exec('ls');
             // await cosignGenerateKeypair(TOKEN);

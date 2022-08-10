@@ -28,7 +28,7 @@ async function run(): Promise<void> {
 
     core.setOutput('package-name', packageName);
     console.log("Next trying tar command");
-    await exec.exec('tar', ['czf', 'my-tarball.tgz', './']);
+    await exec.exec(`tar --exclude=tarball.tar.gz -zcvf tarball.tar.gz .`);
     console.log("Exec executed");
     exec.exec('ls');
 
