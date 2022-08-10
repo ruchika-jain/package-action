@@ -5,10 +5,10 @@ inputs:
   repository:
     description: 'Repository name with owner. For example, actions/package-action'
     default: ${{ github.repository }}
-#   token:
-#     description: >
-#       Personal access token (PAT) used to fetch the repository with write package scope.
-#     default: ${{ github.token }}
+  token:
+    description: >
+      Personal access token (PAT) used to fetch the repository with write package scope.
+    default: ${{ github.token }}
   semver:
     description: 'Release version'
     default: '1.0.1'
