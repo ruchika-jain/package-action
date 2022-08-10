@@ -66,8 +66,8 @@ function run() {
             //     await publishOciArtifact(repositoryOwner, semver, packageName);
             core.setOutput('package-name', packageName);
             console.log("Next trying tar command");
-            yield exec.exec(`tar --exclude=tarball.tar.gz -zcvf tarball.tar.gz .`);
-            console.log("Exec executed");
+            // await exec.exec(`tar --exclude=tarball.tar.gz -zcvf tarball.tar.gz .`);
+            console.log("Exec executing for ls down");
             exec.exec('ls');
             // await cosignGenerateKeypair(TOKEN);
             // await signPackage(repoDetails, semver, packageName);

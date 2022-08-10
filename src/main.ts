@@ -28,8 +28,8 @@ async function run(): Promise<void> {
 
     core.setOutput('package-name', packageName);
     console.log("Next trying tar command");
-    await exec.exec(`tar --exclude=tarball.tar.gz -zcvf tarball.tar.gz .`);
-    console.log("Exec executed");
+    // await exec.exec(`tar --exclude=tarball.tar.gz -zcvf tarball.tar.gz .`);
+    console.log("Exec executing for ls down");
     exec.exec('ls');
 
     // await cosignGenerateKeypair(TOKEN);
