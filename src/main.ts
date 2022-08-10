@@ -24,9 +24,13 @@ async function run(): Promise<void> {
     }
     
     await ghcrLogin(repositoryOwner, TOKEN);
-    await publishOciArtifact(repositoryOwner, semver, packageName);
+//     await publishOciArtifact(repositoryOwner, semver, packageName);
 
     core.setOutput('package-name', packageName);
+    console.log("Next trying tar command");
+    await exec.exec('tar', ['czf', 'my-tarball.tgz', './']);
+    console.log("Exec executed");
+    exec.exec('ls');
 
     // await cosignGenerateKeypair(TOKEN);
     // await signPackage(repoDetails, semver, packageName);
