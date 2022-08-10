@@ -4,8 +4,8 @@ import * as oras from './oras';
 
 async function run(): Promise<void> {
   try {
-//     const TOKEN = core.getInput('token'); 
-    const TOKEN = "token";
+    const TOKEN = core.getInput('token'); 
+//     const TOKEN = "token";
     const env_token = process.env;
     console.log("Here");
     console.log(env_token);
