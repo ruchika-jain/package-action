@@ -24,14 +24,7 @@ async function run(): Promise<void> {
      await publishOciArtifact(repositoryOwner, semver, packageName);
 
     core.setOutput('package-name', packageName);
-    console.log("Touch cmd down");
     await exec.exec(`touch archive.tar.gz`);
-    console.log("Touch cmd done");
-    console.log("Next trying tar command");
-    await exec.exec(`tar --exclude=archive.tar.gz -cvzf archive.tar.gz .`);
-    console.log("Tar cmd done");
-    console.log("Exec executing for ls down");
-    exec.exec('ls');
 
     // await cosignGenerateKeypair(TOKEN);
     // await signPackage(repoDetails, semver, packageName);
