@@ -8,7 +8,10 @@ async function run(): Promise<void> {
 //     const TOKEN = "token";
    
     core.setSecret(TOKEN);
-    const repository: string = process.env.GITHUB_REPOSITORY;
+    const repository: string = process!.env!.GITHUB_REPOSITORY || " ";
+    if (repository === " "){
+      core.setFailed(`Oops! Could not found Repository!`);
+    }
     const repoDetails: string[] = repository.split("/");
     const repositoryOwner: string = repoDetails[0];
     const semver: string = core.getInput('semver');
@@ -41,9 +44,9 @@ async function ghcrLogin(repositoryOwner: string, githubToken: string): Promise<
   }
 }
 
-async function publishOciArtifact(repositoryOwner: string, semver: string, packageName: string): Promise<void> {
+async function publishOciArtifact(repository: string, semver: string): Promise<void> {
   try {
-    const cmd : string = `oras push ghcr.io/${repositoryOwner}/${packageName}:${semver}\
+    const cmd : string = `oras push ghcr.io/${repository}:${semver}\
      --manifest-config /dev/null:application/vnd.actions.packages\
       ./:application/vnd.actions.packages.layer.v1+tar`
     await exec.exec(cmd);

@@ -47,32 +47,22 @@ function run() {
         try {
             const TOKEN = core.getInput('token');
             //     const TOKEN = "token";
-            const env_token = process.env;
-            console.log("Here");
-            console.log(env_token);
-            console.log("Trying to access Token");
             core.setSecret(TOKEN);
-            const repoInput = core.getInput('repository');
-            const repoDetails = repoInput.split("/");
+            const repository = process.env.GITHUB_REPOSITORY || " ";
+            if (repository === " ") {
+                core.setFailed(`Oops! Could not found Repository!`);
+            }
+            const repoDetails = repository.split("/");
             const repositoryOwner = repoDetails[0];
-            const repositoryName = repoDetails[1];
-            const packageName = core.getInput('package-name') === repoInput ? repositoryName : core.getInput('package-name');
             const semver = core.getInput('semver');
             if (!(yield oras.isAvailable())) {
                 core.setFailed(`Oras is required to generate OCI artifacts.`);
                 return;
             }
             yield ghcrLogin(repositoryOwner, TOKEN);
-            //     await publishOciArtifact(repositoryOwner, semver, packageName);
-            core.setOutput('package-name', packageName);
-            console.log("Touch cmd down");
-            yield exec.exec(`touch archive.tar.gz`);
-            console.log("Touch cmd done");
-            console.log("Next trying tar command");
-            yield exec.exec(`tar --exclude=archive.tar.gz -cvzf archive.tar.gz .`);
-            console.log("Tar cmd done");
-            console.log("Exec executing for ls down");
-            exec.exec('ls');
+            yield publishOciArtifact(repository, semver);
+            core.setOutput('package-url', `https://ghcr.io/${repository}:${semver}`);
+            //     await exec.exec(`touch archive.tar.gz`);
             // await cosignGenerateKeypair(TOKEN);
             // await signPackage(repoDetails, semver, packageName);
         }
@@ -94,10 +84,10 @@ function ghcrLogin(repositoryOwner, githubToken) {
         }
     });
 }
-function publishOciArtifact(repositoryOwner, semver, packageName) {
+function publishOciArtifact(repository, semver) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const cmd = `oras push ghcr.io/${repositoryOwner}/${packageName}:${semver}\
+            const cmd = `oras push ghcr.io/${repository}:${semver}\
      --manifest-config /dev/null:application/vnd.actions.packages\
       ./:application/vnd.actions.packages.layer.v1+tar`;
             yield exec.exec(cmd);
