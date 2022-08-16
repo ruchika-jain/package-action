@@ -1,23 +1,21 @@
-name: 'Package actions'
-description: 'Publish actions as OCI artifacts to GHCR and sign it.'
-author: 'Ruchika Jain'
+name: 'Package and Publish'
+description: 'Publish actions as OCI artifacts to GHCR'
 inputs:
-  repository:
-    description: 'Repository name with owner. For example, actions/package-action'
-    default: ${{ github.repository }}
   token:
+    required: true
     description: >
-      Personal access token (PAT) used to fetch the repository with write package scope.
+      GITHUB_TOKEN having the write:package scope to publish an action package to GHCR.
     default: ${{ github.token }}
+  workdir:
+    required: false
+    description: The work directory to be tar archived and uploaded as OCI Artifact layer.
+    default: '.'
   semver:
+    required: true
     description: 'Release version'
-    default: '1.0.1'
-  package-name: 
-    description: 'The name of the package to be published to GHCR'
-    default: ${{ github.repository }}
 outputs:
-  package-name: # id of output
-    description: 'The name of package published to GHCR'   
+  package-url: 
+    description: 'The name of package published to GHCR along with semver. For example, https://ghcr.io/actions/package-action:1.0.1'
 runs:
   using: 'node16'
   main: 'dist/index.js'
