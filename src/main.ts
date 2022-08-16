@@ -6,10 +6,7 @@ async function run(): Promise<void> {
   try {
     const TOKEN = core.getInput('token'); 
 //     const TOKEN = "token";
-    const env_token = process.env;
-    console.log("Here");
-    console.log(env_token);
-    console.log("Trying to access Token");
+   
     core.setSecret(TOKEN);
     const repoInput: string = core.getInput('repository');
     const repoDetails: string[] = repoInput.split("/");
@@ -24,7 +21,7 @@ async function run(): Promise<void> {
     }
     
     await ghcrLogin(repositoryOwner, TOKEN);
-//     await publishOciArtifact(repositoryOwner, semver, packageName);
+     await publishOciArtifact(repositoryOwner, semver, packageName);
 
     core.setOutput('package-name', packageName);
     console.log("Touch cmd down");
