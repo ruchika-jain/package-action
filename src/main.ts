@@ -8,11 +8,9 @@ async function run(): Promise<void> {
 //     const TOKEN = "token";
    
     core.setSecret(TOKEN);
-    const repoInput: string = core.getInput('repository');
-    const repoDetails: string[] = repoInput.split("/");
+    const repository: string = process.env.GITHUB_REPOSITORY;
+    const repoDetails: string[] = repository.split("/");
     const repositoryOwner: string = repoDetails[0];
-    const repositoryName: string = repoDetails[1];
-    const packageName: string = core.getInput('package-name') === repoInput ? repositoryName : core.getInput('package-name');
     const semver: string = core.getInput('semver');
     
     if (!(await oras.isAvailable())) {
@@ -21,10 +19,10 @@ async function run(): Promise<void> {
     }
     
     await ghcrLogin(repositoryOwner, TOKEN);
-     await publishOciArtifact(repositoryOwner, semver, packageName);
+    await publishOciArtifact(repository, semver);
 
-    core.setOutput('package-name', packageName);
-    await exec.exec(`touch archive.tar.gz`);
+    core.setOutput('package-url', `https://ghcr.io/${repository}:${semver}`);
+//     await exec.exec(`touch archive.tar.gz`);
 
     // await cosignGenerateKeypair(TOKEN);
     // await signPackage(repoDetails, semver, packageName);
