@@ -31,6 +31,8 @@ jobs:
       - name: Running action   
         uses: ./
         id: publish-action
+        with: 
+#           semver: '1.0.4'
         
 
 #       - name: Signing action
