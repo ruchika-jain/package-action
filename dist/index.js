@@ -50,21 +50,19 @@ function run() {
             core.setSecret(TOKEN);
             const repository = process.env.GITHUB_REPOSITORY || " ";
             if (repository === " ") {
-                core.setFailed(`Oops! Could not found Repository!`);
+                core.setFailed(`Oops! Could not find Repository!`);
             }
             const repoDetails = repository.split("/");
             const repositoryOwner = repoDetails[0];
             const semver = core.getInput('semver');
             if (!(yield oras.isAvailable())) {
-                core.setFailed(`Oras is required to generate OCI artifacts.`);
+                core.setFailed(`OCI Tooling is required to generate OCI artifacts.`);
                 return;
             }
             yield ghcrLogin(repositoryOwner, TOKEN);
             yield publishOciArtifact(repository, semver);
             core.setOutput('package-url', `https://ghcr.io/${repository}:${semver}`);
             //     await exec.exec(`touch archive.tar.gz`);
-            // await cosignGenerateKeypair(TOKEN);
-            // await signPackage(repoDetails, semver, packageName);
         }
         catch (error) {
             if (error instanceof Error)
@@ -76,11 +74,10 @@ function ghcrLogin(repositoryOwner, githubToken) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield exec.exec(`oras login ghcr.io`, ['-u', repositoryOwner, '-p', githubToken]);
-            console.log("Oras logged in successfully!");
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(`Oops! Oras login failed!`);
+                core.setFailed(`Oops! Could not login to GHCR!`);
         }
     });
 }
@@ -91,7 +88,7 @@ function publishOciArtifact(repository, semver) {
      --manifest-config /dev/null:application/vnd.actions.packages\
       ./:application/vnd.actions.packages.layer.v1+tar`;
             yield exec.exec(cmd);
-            console.log("Oras artifacts pushed successfully!");
+            core.info("Action package pushed successfully to GHCR!");
         }
         catch (error) {
             if (error instanceof Error)
